@@ -20,6 +20,9 @@ npm install --legacy-peer-deps
 #FOR THE BACKEND(go to directory server)
 npm install
 
+# Step 5: Start the database server.
+npm start
+
 # Step 4: Start the development server with auto-reloading and an instant preview.
 npm run dev
 ```
