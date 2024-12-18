@@ -8,7 +8,7 @@ import {
 } from "@/components/ui/table";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
-import { Eye, Pencil, Trash2 } from "lucide-react";
+import { Eye, Pencil} from "lucide-react";
 import {
   Dialog,
   DialogContent,
@@ -24,9 +24,7 @@ import {
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useState } from "react";
-import { SubscriberMultiSelectToolbar } from "./SubscriberMultiSelectToolbar";
 import { SortableTableHeader } from "./table/SortableTableHeader";
 import { sortData } from "@/utils/sorting";
 import { SortConfig } from "@/types/sorting";
@@ -35,25 +33,14 @@ interface SubscribersTableProps {
   subscribers: any[];
   onEdit: (subscriber: any) => void;
   onView: (subscriber: any) => void;
-  onDelete: (subscriber: any) => void;
-  onMultiDelete?: (ids: string[]) => void;
 }
 
 export function SubscribersTable({ 
   subscribers, 
   onEdit, 
   onView,
-  onDelete,
-  onMultiDelete,
 }: SubscribersTableProps) {
-  const [isMultiSelectMode, setIsMultiSelectMode] = useState(false);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [sortConfig, setSortConfig] = useState<SortConfig | null>(null);
-
-  const toggleMultiSelect = () => {
-    setIsMultiSelectMode(!isMultiSelectMode);
-    setSelectedIds([]);
-  };
 
   const handleSort = (field: string) => {
     setSortConfig(current => ({
@@ -64,62 +51,12 @@ export function SubscribersTable({
 
   const sortedSubscribers = sortData(subscribers, sortConfig);
 
-  const handleSelectAll = () => {
-    if (selectedIds.length === subscribers.length) {
-      setSelectedIds([]);
-    } else {
-      setSelectedIds(subscribers.map(s => s.id));
-    }
-  };
-
-  const handleSelect = (id: string) => {
-    setSelectedIds(prev => 
-      prev.includes(id) 
-        ? prev.filter(i => i !== id)
-        : [...prev, id]
-    );
-  };
-
-  const handleDeleteSelected = () => {
-    if (onMultiDelete && selectedIds.length > 0) {
-      onMultiDelete(selectedIds);
-      setIsMultiSelectMode(false);
-      setSelectedIds([]);
-    }
-  };
-
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <Button
-          variant={isMultiSelectMode ? "secondary" : "outline"}
-          onClick={toggleMultiSelect}
-        >
-          {isMultiSelectMode ? "Exit Multi-Select" : "Multi-Select"}
-        </Button>
-      </div>
-
-      {isMultiSelectMode && selectedIds.length > 0 && (
-        <SubscriberMultiSelectToolbar
-          selectedIds={selectedIds}
-          onSelectAll={handleSelectAll}
-          onDelete={handleDeleteSelected}
-          totalCount={subscribers.length}
-        />
-      )}
-
       <div className="rounded-md border">
         <Table>
           <TableHeader>
             <TableRow>
-              {isMultiSelectMode && (
-                <TableHead className="w-[50px] text-center">
-                  <Checkbox
-                    checked={selectedIds.length === subscribers.length}
-                    onCheckedChange={handleSelectAll}
-                  />
-                </TableHead>
-              )}
               <TableHead className="w-[50px] text-center"></TableHead>
               <SortableTableHeader
                 field="fullName"
@@ -143,14 +80,6 @@ export function SubscribersTable({
           <TableBody>
             {sortedSubscribers.map((subscriber) => (
               <TableRow key={subscriber.id}>
-                {isMultiSelectMode && (
-                  <TableCell className="text-center">
-                    <Checkbox
-                      checked={selectedIds.includes(subscriber.id)}
-                      onCheckedChange={() => handleSelect(subscriber.id)}
-                    />
-                  </TableCell>
-                )}
                 <TableCell className="text-center">
                   <Avatar>
                     <AvatarImage
@@ -239,22 +168,6 @@ export function SubscribersTable({
                         </TooltipTrigger>
                         <TooltipContent>
                           <p>View</p>
-                        </TooltipContent>
-                      </Tooltip>
-
-                      <Tooltip>
-                        <TooltipTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            size="icon" 
-                            className="h-8 w-8"
-                            onClick={() => onDelete(subscriber)}
-                          >
-                            <Trash2 className="h-4 w-4" />
-                          </Button>
-                        </TooltipTrigger>
-                        <TooltipContent>
-                          <p>Delete</p>
                         </TooltipContent>
                       </Tooltip>
                     </TooltipProvider>

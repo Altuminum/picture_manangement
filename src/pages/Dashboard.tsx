@@ -6,16 +6,6 @@ import { useState, useEffect } from "react";
 import { SubscriberFilters } from "@/components/SubscriberFilters";
 import { format } from "date-fns";
 import { SubscribersTable } from "@/components/SubscribersTable";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const Dashboard = () => {
   const { toast } = useToast();
@@ -26,11 +16,9 @@ const Dashboard = () => {
   const [claimFilter, setClaimFilter] = useState("all");
   const [dateFilter, setDateFilter] = useState<Date>();
   const [selectedSubscriber, setSelectedSubscriber] = useState<any>(null);
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
-  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [subscribers, setSubscribers] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   // Fetch subscribers from API
   useEffect(() => {
@@ -154,89 +142,9 @@ const Dashboard = () => {
     }
   };
 
-  const handleConfirmDelete = async (selectedIds?: string[]) => {
-    try {
-      if (selectedIds && selectedIds.length > 0) {
-        // Bulk delete
-        const response = await fetch('http://localhost:3001/api/profiles/bulk', {
-          method: 'DELETE',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({ ids: selectedIds }),
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete subscribers');
-        }
-
-        setSubscribers(prev =>
-          prev.filter(sub => !selectedIds.includes(sub.id))
-        );
-      } else if (selectedSubscriber) {
-        // Single delete
-        const response = await fetch(`http://localhost:3001/api/profiles/${selectedSubscriber.id}`, {
-          method: 'DELETE',
-        });
-
-        if (!response.ok) {
-          throw new Error('Failed to delete subscriber');
-        }
-
-        setSubscribers(prev =>
-          prev.filter(sub => sub.id !== selectedSubscriber.id)
-        );
-      }
-
-      setIsDeleteDialogOpen(false);
-      toast({
-        title: "Success",
-        description: "Subscriber(s) deleted successfully",
-      });
-    } catch (error) {
-      console.error('Error deleting subscriber(s):', error);
-      toast({
-        title: "Error",
-        description: error instanceof Error ? error.message : "Failed to delete subscriber(s)",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteMultiple = async (ids: string[]) => {
-    try {
-      const deletePromises = ids.map(id =>
-        fetch(`http://localhost:3001/api/profiles/${id}`, {
-          method: 'DELETE'
-        })
-      );
-
-      await Promise.all(deletePromises);
-
-      setSubscribers(prev => prev.filter(sub => !ids.includes(sub.id)));
-
-      toast({
-        title: "Success",
-        description: `${ids.length} subscriber(s) deleted successfully`,
-      });
-    } catch (error) {
-      console.error('Error deleting subscribers:', error);
-      toast({
-        title: "Error",
-        description: "Failed to delete subscribers",
-        variant: "destructive"
-      });
-    }
-  };
-
   const handleViewSubscriber = (subscriber: any) => {
     setSelectedSubscriber(subscriber);
     setIsDetailsOpen(true);
-  };
-
-  const handleDeleteSubscriber = (subscriber: any) => {
-    setSelectedSubscriber(subscriber);
-    setIsDeleteDialogOpen(true);
   };
 
   const filteredSubscribers = subscribers.filter((subscriber) => {
@@ -319,38 +227,16 @@ const Dashboard = () => {
               subscribers={filteredSubscribers}
               onView={handleViewSubscriber}
               onEdit={handleEditSubscriber}
-              onDelete={handleDeleteSubscriber}
-              onMultiDelete={handleDeleteMultiple}
             />
           </CardContent>
         </Card>
       </main>
-
+      
       <SubscriberDetailsDialog
         subscriber={selectedSubscriber}
         open={isDetailsOpen}
         onOpenChange={setIsDetailsOpen}
       />
-
-      <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              {selectedIds && selectedIds.length > 0
-                ? `This will permanently delete ${selectedIds.length} selected subscribers.`
-                : "This will permanently delete this subscriber."}
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => {
-              setSelectedIds([]);
-              setSelectedSubscriber(null);
-            }}>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={() => handleConfirmDelete(selectedIds)}>Delete</AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 };
